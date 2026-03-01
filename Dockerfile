@@ -7,7 +7,7 @@
 # Unfortunately, it means that caching is more difficult.
 # Nix uses /nix/store for both caching AND the final output (lots of symlinks)
 FROM nixos/nix:latest AS builder
-ENV NIX_CONFIG="experimental-features = nix-command flakes"
+ENV NIX_CONFIG="experimental-features = nix-command flakes\nsandbox = false"
 
 WORKDIR /build
 
