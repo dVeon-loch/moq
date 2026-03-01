@@ -7,7 +7,7 @@
 # Unfortunately, it means that caching is more difficult.
 # Nix uses /nix/store for both caching AND the final output (lots of symlinks)
 FROM nixos/nix:latest AS builder
-ENV NIX_CONFIG="experimental-features = nix-command flakes\nsandbox = false"
+ENV NIX_CONFIG="experimental-features = nix-command flakes"
 
 WORKDIR /build
 
@@ -20,7 +20,7 @@ ARG package
 
 # Build the package
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/nix,from=nixos/nix:latest,source=/nix \
-	nix build .#${package} --out-link result && \
+	nix build .#${package} --option sandbox false --out-link result && \
 	cp -r $(nix-store -qR result) /output/store && \
 	cp -r $(readlink -f result) /output/result && \
 	rm -rf /output/store/$(basename $(readlink -f result))
