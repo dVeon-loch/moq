@@ -8,6 +8,7 @@ on:
       # NOTE: The -cli is automatically removed
       - 'moq-cli-v*'
       - 'moq-token-cli-v*'
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io/kixelated
