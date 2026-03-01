@@ -10,9 +10,6 @@ on:
       - 'moq-token-cli-v*'
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io/${{ github.repository_owner }}
-
 jobs:
   deploy:
     name: Release
@@ -25,6 +22,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+
+      # Compute lowercase registry (Docker requires all-lowercase image names)
+      - run: echo "REGISTRY=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       # Figure out the docker image based on the tag
       - id: parse
