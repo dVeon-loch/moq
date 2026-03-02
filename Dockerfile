@@ -29,8 +29,7 @@ RUN cargo build --release -p moq-relay && cp target/release/moq-relay /output
 FROM debian:bookworm-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl certbot python3-pip && \
-    pip3 install --break-system-packages certbot-dns-bunny && \
+    apt-get install -y --no-install-recommends curl certbot && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /output /usr/local/bin/moq-relay

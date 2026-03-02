@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CERTBOT_LOG=/run/certbot-logs/letsencrypt.log
+CERTBOT_LOG=/var/log/letsencrypt/letsencrypt.log
 
 # On any failure, dump the certbot log if it exists so the cause is visible
 trap 'if [ -f "$CERTBOT_LOG" ]; then echo "--- certbot log ---"; cat "$CERTBOT_LOG"; fi' ERR
@@ -25,22 +25,15 @@ if [ -n "$BUNNY_ZONEID" ] && [ -n "$BUNNY_RECORDID" ] && [ -n "$BUNNY_APIKEY" ] 
     echo "DNS updated."
 fi
 
-# 2. Obtain/renew TLS certificate via certbot DNS challenge.
-if [ -n "$CERTBOT_DOMAIN" ] && [ -n "$CERTBOT_EMAIL" ] && [ -n "$BUNNY_APIKEY" ]; then
+# 2. Obtain/renew TLS certificate via certbot standalone HTTP challenge.
+# Requires port 80 to be open. DNS A record must already point at this host (step 1).
+if [ -n "$CERTBOT_DOMAIN" ] && [ -n "$CERTBOT_EMAIL" ]; then
     CERT_DIR="/run/letsencrypt"
-    CREDS_FILE="/run/certbot-bunny.ini"
-
-    printf 'dns_bunny_api_key = %s\n' "$BUNNY_APIKEY" > "$CREDS_FILE"
-    chmod 600 "$CREDS_FILE"
 
     certbot certonly \
-        --authenticator dns-bunny \
-        --dns-bunny-credentials "$CREDS_FILE" \
-        --dns-bunny-propagation-seconds 60 \
+        --standalone \
         --config-dir "$CERT_DIR" \
-        --work-dir /run/certbot-work \
-        --logs-dir /run/certbot-logs \
-        ${CERTBOT_STAGING:+--staging} \
+        ${CERTBOT_STAGING:+--staging -vvv} \
         -d "$CERTBOT_DOMAIN" \
         --email "$CERTBOT_EMAIL" \
         --non-interactive --agree-tos \
