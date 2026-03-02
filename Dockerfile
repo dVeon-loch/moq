@@ -1,7 +1,4 @@
-FROM rust:bookworm AS chef
-
-RUN apt-get update && apt-get install -y cmake clang pkg-config && rm -rf /var/lib/apt/lists/*
-RUN cargo install cargo-chef
+FROM lukemathwalker/cargo-chef:latest-rust-bookworm AS chef
 
 WORKDIR /build
 
@@ -17,9 +14,14 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # --- Builder: cook deps (cached), then build the binary ---
 FROM chef AS builder
+
+# cmake and clang are required by aws-lc-rs (statically linked TLS)
+RUN apt-get update && apt-get install -y cmake clang pkg-config && rm -rf /var/lib/apt/lists/*
+
 COPY --from=planner /build/recipe.json recipe.json
-# This layer is only invalidated when Cargo.toml/Cargo.lock change
-RUN cargo chef cook --release --recipe-path recipe.json
+# Only cook moq-relay's transitive deps — not the whole workspace
+RUN cargo chef cook --release -p moq-relay --recipe-path recipe.json
+
 COPY . .
 RUN cargo build --release -p moq-relay && cp target/release/moq-relay /output
 
