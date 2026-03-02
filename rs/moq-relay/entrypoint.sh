@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+CERTBOT_LOG=/run/certbot-logs/letsencrypt.log
+
+# On any failure, dump the certbot log if it exists so the cause is visible
+trap 'if [ -f "$CERTBOT_LOG" ]; then echo "--- certbot log ---"; cat "$CERTBOT_LOG"; fi' ERR
+
 # 1. Update BunnyCDN A record with the current public IP.
 if [ -n "$BUNNY_ZONEID" ] && [ -n "$BUNNY_RECORDID" ] && [ -n "$BUNNY_APIKEY" ] && [ -n "$DNS_SUBDOMAIN" ]; then
     CURRENT_IP=$(curl -4 icanhazip.com)
@@ -31,7 +36,7 @@ if [ -n "$CERTBOT_DOMAIN" ] && [ -n "$CERTBOT_EMAIL" ] && [ -n "$BUNNY_APIKEY" ]
     certbot certonly \
         --authenticator dns-bunny \
         --dns-bunny-credentials "$CREDS_FILE" \
-        --dns-bunny-propagation-seconds 30 \
+        --dns-bunny-propagation-seconds 60 \
         --config-dir "$CERT_DIR" \
         --work-dir /run/certbot-work \
         --logs-dir /run/certbot-logs \
