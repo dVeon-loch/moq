@@ -6,20 +6,18 @@ RUN apt-get update && apt-get install -y cmake clang pkg-config && rm -rf /var/l
 WORKDIR /build
 COPY . .
 
-ARG package=moq-relay
-
-# moq and moq-token binaries come from differently-named cargo packages
-RUN case "${package}" in \
-    moq)       cargo build --release -p moq-cli ;; \
-    moq-token) cargo build --release -p moq-token-cli ;; \
-    *)         cargo build --release -p "${package}" ;; \
-    esac && \
-    cp target/release/${package} /output
+RUN cargo build --release -p moq-relay && \
+    cp target/release/moq-relay /output
 
 FROM debian:bookworm-slim
 
-ARG package=moq-relay
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl certbot python3-pip && \
+    pip3 install --break-system-packages certbot-dns-bunny && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /output /usr/local/bin/app
+COPY --from=builder /output /usr/local/bin/moq-relay
+COPY rs/moq-relay/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/app"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
