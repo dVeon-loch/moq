@@ -40,6 +40,7 @@ if [ -n "$CERTBOT_DOMAIN" ] && [ -n "$CERTBOT_EMAIL" ] && [ -n "$BUNNY_APIKEY" ]
         --config-dir "$CERT_DIR" \
         --work-dir /run/certbot-work \
         --logs-dir /run/certbot-logs \
+        ${CERTBOT_STAGING:+--staging} \
         -d "$CERTBOT_DOMAIN" \
         --email "$CERTBOT_EMAIL" \
         --non-interactive --agree-tos \
